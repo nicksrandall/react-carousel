@@ -1,0 +1,24 @@
+{
+  "name": "carousel-stories",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nick Randall",
+  "license": "MIT",
+  "dependencies": {
+    "emotion": "^9.0.2",
+    "hoist-non-react-statics": "^2.5.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-emotion": "^9.0.2"
+  },
+  "devDependencies": {
+    "babel-plugin-emotion": "^9.0.1"
+  }
+}

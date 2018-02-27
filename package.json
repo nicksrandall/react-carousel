@@ -1,0 +1,63 @@
+{
+  "name": "react-carousel",
+  "version": "1.0.0",
+  "description": "a carousel component using render props.",
+  "main": "dist/react-carousel.cjs.js",
+  "jsnext:main": "dist/react-carousel.esm.js",
+  "module": "dist/react-carousel.esm.js",
+  "scripts": {
+    "build": "nick-scripts build --bundle --p-react",
+    "lint": "nick-scripts lint",
+    "test": "nick-scripts test",
+    "format": "nick-scripts format",
+    "storybook": "start-storybook -p 6006 -c stories",
+    "storybook:build": "build-storybook -c stories",
+    "storybook:install": "cd stories && npm install",
+    "storybook:serve": "serve ./storybook-static -p 6006"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicksrandall/react-carousel.git"
+  },
+  "keywords": [
+    "react",
+    "carousel"
+  ],
+  "author": "Nick Randall",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nicksrandall/react-carousel/issues"
+  },
+  "homepage": "https://github.com/nicksrandall/react-carousel#readme",
+  "eslintConfig": {
+    "extends": "./node_modules/nick-scripts/eslint.js",
+    "rules": {
+      "max-lines": "off",
+      "no-eq-null": "off",
+      "eqeqeq": "off",
+      "react/jsx-indent": "off",
+      "complexity": [
+        "error",
+        12
+      ]
+    }
+  },
+  "eslintIgnore": [
+    "node_modules",
+    "coverage",
+    "dist",
+    "storybook-static",
+    "typings"
+  ],
+  "devDependencies": {
+    "@storybook/react": "^3.3.14",
+    "eslint-plugin-react": "^7.7.0",
+    "nick-scripts": "0.0.1"
+  },
+  "dependencies": {
+    "preact": "^8.2.7",
+    "prop-types": "^15.6.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  }
+}
