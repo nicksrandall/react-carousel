@@ -97,11 +97,10 @@ const Dot = styled('li')`
 
 class Examples extends Component {
   render() {
-    const items = ['Black', 'Red', 'Green', 'Blue', 'Orange', 'Purple']
     return (
       <ExampleContent>
         <h2>Basic example</h2>
-        <BasicCarousel items={items} />
+        <BasicCarousel />
       </ExampleContent>
     )
   }
@@ -110,48 +109,45 @@ class Examples extends Component {
 function BasicCarousel() {
   return (
     <Carousel
+      slideCount={6}
+      slideDuration={10000}
+      animationDuration={1500}
       render={({
         getRootProps,
         getPrevButtonProps,
         getWindowProps,
         getTrackProps,
-        getSlideProps,
+        getNextSlideProps,
+        getCurrentSlideProps,
+        getPrevSlideProps,
         getNextButtonProps,
         getIndicatorListProps,
         getIndicatorProps,
+        prevIndex,
+        currentIndex,
+        nextIndex,
+        slideCount,
       }) => (
         <Slider {...getRootProps()}>
           <PrevButton {...getPrevButtonProps()}>Prev</PrevButton>
           <Window {...getWindowProps({refKey: 'innerRef'})}>
             <Track {...getTrackProps()}>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 0})}>
-                <Title>1</Title>
+              <Slide {...getPrevSlideProps()}>
+                <Title>{prevIndex}</Title>
               </Slide>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 1})}>
-                <Title>2</Title>
+              <Slide {...getCurrentSlideProps()}>
+                <Title>{currentIndex}</Title>
               </Slide>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 2})}>
-                <Title>3</Title>
-              </Slide>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 3})}>
-                <Title>4</Title>
-              </Slide>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 4})}>
-                <Title>5</Title>
-              </Slide>
-              <Slide {...getSlideProps({refKey: 'innerRef', index: 5})}>
-                <Title>6</Title>
+              <Slide {...getNextSlideProps()}>
+                <Title>{nextIndex}</Title>
               </Slide>
             </Track>
           </Window>
           <NextButton {...getNextButtonProps()}>Next</NextButton>
           <Dots {...getIndicatorListProps()}>
-            <Dot {...getIndicatorProps({index: 0})}>1</Dot>
-            <Dot {...getIndicatorProps({index: 1})}>2</Dot>
-            <Dot {...getIndicatorProps({index: 2})}>3</Dot>
-            <Dot {...getIndicatorProps({index: 3})}>4</Dot>
-            <Dot {...getIndicatorProps({index: 4})}>5</Dot>
-            <Dot {...getIndicatorProps({index: 5})}>6</Dot>
+            {Array.from({length: slideCount}).map((_, idx) => (
+              <Dot key={idx} {...getIndicatorProps({index: idx})}>{idx}</Dot>
+            ))}
           </Dots>
         </Slider>
       )}

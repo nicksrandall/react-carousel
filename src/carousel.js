@@ -1,73 +1,63 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import {unwrapArray, noop, composeEventHandlers, isDOMElement} from './utils'
+import {unwrapArray, noop, composeEventHandlers} from './utils'
 
 class Carousel extends React.Component {
   static propTypes = {
     children: PropTypes.func,
     render: PropTypes.func,
     animationDuration: PropTypes.number,
-    slidesPerPage: PropTypes.number,
     calculateWidth: PropTypes.func,
     dynamicSizes: PropTypes.bool,
+    slideDuration: PropTypes.number,
+    slideCount: PropTypes.number.isRequired,
+    autoPlay: PropTypes.bool,
   }
   static defaultProps = {
     animationDuration: 250,
-    slidesPerPage: 1,
+    slideDuration: 0,
     calculateWidth: context => context._windowRef.offsetWidth,
     dynamicSizes: false,
+    autoPlay: true,
   }
   constructor(props) {
     super(props)
     this.state = {
+      prevIndex: this.props.slideCount - 1,
       currentIndex: 0,
-      countOfSlides: 0,
+      nextIndex: 1,
+      finalPrevIndex: this.props.slideCount - 1,
+      finalCurrentIndex: 0,
+      finalNextIndex: 1,
       windowWidth: 0,
       trackWidth: 0,
       dragOffset: 0,
+      transitionDirection: 1,
     }
     this.running = false
-    this.widths = []
   }
   calculateSizes = () => {
-    let countOfSlides = 0
-    let trackWidth = 0
-
-    if (this.props.dynamicSizes) {
-      if (isDOMElement(this._trackRef)) {
-        Array.from(this._trackRef.childNodes).forEach(node => {
-          let width = this.props.calculateWidth(this, node)
-          this.widths.push(width)
-          trackWidth += width
-          countOfSlides++
-        })
-      } else {
-        this._trackRef.props.children.forEach(child => {
-          let width = this.props.calculateWidth(this, child)
-          this.widths.push(width)
-          trackWidth += width
-          countOfSlides++
-        })
-      }
-    } else {
-      countOfSlides = isDOMElement(this._trackRef)
-        ? this._trackRef.childNodes.length
-        : this._trackRef.props.children.length
-      trackWidth = this._windowRef.offsetWidth * countOfSlides
-      for (let i = 0; i < countOfSlides; i++) {
-        this.widths.push(this._windowRef.offsetWidth / this.props.slidesPerPage)
-      }
-    }
     this.setState({
-      countOfSlides,
       windowWidth: this._windowRef.offsetWidth,
-      trackWidth: trackWidth,
+      trackWidth: this._windowRef.offsetWidth * 3,
     })
   }
   componentDidMount() {
     this.calculateSizes()
     window.addEventListener('resize', this.resize, false)
+
+    if (this.props.autoPlay) {
+      this.play()
+    }
+  }
+  play = () => {
+    this.timeout = setTimeout(() => {
+      this.goToSlide(this.nextIndex(this.state.currentIndex))
+    }, this.props.slideDuration)
+  }
+  pause = () => {
+    clearTimeout(this.timeout)
   }
   resize = () => {
     if (this.running) {
@@ -82,47 +72,77 @@ class Carousel extends React.Component {
   componentWillUnmount() {
     window.removeEventListener('resize', this.resize, false)
   }
-  calculateOffset = index => {
-    let offset = 0
-    for (let i = 0; i < index; i++) {
-      offset += this.widths[i]
-    }
-    return offset
-  }
-  goToSlide = (idx, animate = true) => {
-    const index =
-      Math.floor(idx / this.props.slidesPerPage) * this.props.slidesPerPage
-    let animationMS = 0
-    if (animate) {
-      animationMS =
-        Math.abs(
-          this.calculateOffset(this.state.currentIndex) +
-            this.state.dragOffset -
-            this.calculateOffset(index),
-        ) *
-        this.props.animationDuration /
-        this.state.windowWidth
-    }
-
+  commitUpdate = () => {
     this.setState({
-      animationMS,
-      currentIndex: index,
+      finalPrevIndex: this.state.prevIndex,
+      finalCurrentIndex: this.state.currentIndex,
+      finalNextIndex: this.state.nextIndex,
     })
   }
-  prevSlide = (animate = true) => {
-    const currentIndex =
-      this.state.currentIndex > 0
-        ? this.state.currentIndex - 1
-        : this.state.countOfSlides - 1
+  goToSlide = (index, jump = false) => {
+    this.pause()
 
-    this.goToSlide(currentIndex, animate)
+    let transitionDirection = 1
+    if (
+      index > this.state.currentIndex ||
+      (index === 0 && this.state.currentIndex === this.props.slideCount - 1)
+    ) {
+      transitionDirection = 2
+    } else if (
+      index < this.state.currentIndex ||
+      (this.state.currentIndex === 0 && index === this.props.slideCount - 1)
+    ) {
+      transitionDirection = 0
+    }
+
+    let animationMS =
+      Math.abs(
+        this.state.windowWidth +
+          this.state.dragOffset -
+          this.state.windowWidth * transitionDirection,
+      ) *
+      this.props.animationDuration /
+      this.state.windowWidth
+
+    if (this.props.animationDuration <= 0) {
+      this.commitUpdate()
+    }
+
+    let prevIndex = this.prevIndex(index)
+    let currentIndex = index
+    let nextIndex = this.nextIndex(index)
+
+    if (jump) {
+      switch (transitionDirection) {
+        case 0:
+          this.setState({finalPrevIndex: index})
+          break
+        case 2:
+          this.setState({finalNextIndex: index})
+          break
+      }
+    }
+
+    this.setState(
+      {
+        transitionDirection,
+        animationMS,
+        prevIndex,
+        currentIndex,
+        nextIndex,
+      },
+      () => {
+        if (this.props.autoPlay) {
+          this.play()
+        }
+      },
+    )
   }
-  nextSlide = (animate = true) => {
-    const currentIndex =
-      this.state.currentIndex < this.state.countOfSlides - 1
-        ? this.state.currentIndex + 1
-        : 0
-    this.goToSlide(currentIndex, animate)
+  prevIndex = index => {
+    return index > 0 ? index - 1 : this.props.slideCount - 1
+  }
+  nextIndex = index => {
+    return index < this.props.slideCount - 1 ? index + 1 : 0
   }
   getRootProps = ({...rest} = {}) => {
     return {
@@ -138,7 +158,8 @@ class Carousel extends React.Component {
   }
   trackRef = node => (this._trackRef = node)
   track_handleTransitionEnd = () => {
-    this.setState({animationMS: 0})
+    this.commitUpdate()
+    this.setState({animationMS: 0, transitionDirection: 1})
   }
   getTrackProps = ({refKey = 'ref', onTransitionEnd, style, ...rest} = {}) => {
     return {
@@ -150,9 +171,9 @@ class Carousel extends React.Component {
           this.state.animationMS > 0
             ? `transform ${this.state.animationMS}ms`
             : null,
-        transform: `translate3d(-${this.calculateOffset(
-          this.state.currentIndex,
-        ) + this.state.dragOffset}px, 0px, 0px)`,
+        transform: `translate3d(-${this.state.windowWidth *
+          this.state.transitionDirection +
+          this.state.dragOffset}px, 0px, 0px)`,
       },
       onTransitionEnd: composeEventHandlers(
         onTransitionEnd,
@@ -178,21 +199,13 @@ class Carousel extends React.Component {
       Math.round(
         Math.sqrt(Math.pow(touchObject.curX - touchObject.startX, 2)),
       ) * (touchObject.curX > touchObject.startX ? -1 : 1)
-    if (this.state.currentIndex === 0 && dragOffset < 0) {
-      dragOffset = 0
-    } else if (
-      this.state.currentIndex === this.state.countOfSlides - 1 &&
-      dragOffset > 0
-    ) {
-      dragOffset = 0
-    }
     this.setState({dragOffset, touchObject})
   }
   slide_handleSwipeEnd = () => {
     if (this.state.dragOffset > 100) {
-      this.nextSlide()
+      this.goToSlide(this.nextIndex(this.state.currentIndex))
     } else if (this.state.dragOffset < -100) {
-      this.prevSlide()
+      this.goToSlide(this.prevIndex(this.state.currentIndex))
     }
     this.setState({
       dragging: false,
@@ -203,12 +216,20 @@ class Carousel extends React.Component {
       },
     })
   }
-  getSlideProps = ({
+  getNextSlideProps = ({style, ...rest} = {}) => {
+    return {
+      style: {
+        ...style,
+        width: this.state.windowWidth,
+      },
+      ...rest,
+    }
+  }
+  getCurrentSlideProps = ({
     onMouseDown,
     onMouseMove,
     onMouseUp,
     onMouseLeave,
-    index,
     style,
     ...rest
   } = {}) => {
@@ -228,13 +249,22 @@ class Carousel extends React.Component {
       ),
       style: {
         ...style,
-        width: this.widths[index],
+        width: this.state.windowWidth,
+      },
+      ...rest,
+    }
+  }
+  getPrevSlideProps = ({style, ...rest} = {}) => {
+    return {
+      style: {
+        ...style,
+        width: this.state.windowWidth,
       },
       ...rest,
     }
   }
   prevButton_handleClick = () => {
-    this.prevSlide()
+    this.goToSlide(this.prevIndex(this.state.currentIndex))
   }
   getPrevButtonProps = ({onClick, ...rest} = {}) => {
     return {
@@ -245,7 +275,7 @@ class Carousel extends React.Component {
     }
   }
   nextButton_handleClick = () => {
-    this.nextSlide()
+    this.goToSlide(this.nextIndex(this.state.currentIndex))
   }
   getNextButtonProps = ({onClick, ...rest} = {}) => {
     return {
@@ -261,11 +291,14 @@ class Carousel extends React.Component {
     }
   }
   indicator_makeHandleClick = idx => () => {
-    this.goToSlide(idx)
+    this.goToSlide(idx, true)
   }
   getIndicatorProps = ({onClick, index, ...rest} = {}) => {
     return {
-      onClick: composeEventHandlers(onClick, this.indicator_makeHandleClick(index)),
+      onClick: composeEventHandlers(
+        onClick,
+        this.indicator_makeHandleClick(index),
+      ),
       ...rest,
     }
   }
@@ -274,7 +307,9 @@ class Carousel extends React.Component {
       getRootProps,
       getWindowProps,
       getTrackProps,
-      getSlideProps,
+      getPrevSlideProps,
+      getCurrentSlideProps,
+      getNextSlideProps,
       getPrevButtonProps,
       getNextButtonProps,
       getIndicatorListProps,
@@ -284,13 +319,18 @@ class Carousel extends React.Component {
       getRootProps,
       getWindowProps,
       getTrackProps,
-      getSlideProps,
+      getPrevSlideProps,
+      getCurrentSlideProps,
+      getNextSlideProps,
       getPrevButtonProps,
       getNextButtonProps,
       getIndicatorListProps,
       getIndicatorProps,
 
-      currentIndex: this.state.currentIndex,
+      slideCount: this.props.slideCount,
+      prevIndex: this.state.finalPrevIndex,
+      currentIndex: this.state.finalCurrentIndex,
+      nextIndex: this.state.finalNextIndex,
     }
   }
   render() {

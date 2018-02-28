@@ -11,6 +11,7 @@
     "react"
   ],
   "plugins": [
+    ["emotion", { "sourceMap": true, "autoLabel": true }],
     "transform-class-properties",
     "transform-object-rest-spread"
   ]
