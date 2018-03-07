@@ -1,4 +1,4 @@
-import React, {Component} from 'react'
+import React, {Component, Fragment} from 'react'
 import Carousel from '../../src'
 
 import styled from 'react-emotion'
@@ -133,27 +133,31 @@ function BasicCarousel() {
           <PrevButton {...getPrevButtonProps()}>Prev</PrevButton>
           <Window {...getWindowProps({refKey: 'innerRef'})}>
             <Track {...getTrackProps()}>
-              <Slide {...getPrevSlideProps()}>
-                <Title>{prevIndex}</Title>
-                <Title>{prevIndex + 1}</Title>
-                <Title>{prevIndex + 2}</Title>
-              </Slide>
-              <Slide {...getCurrentSlideProps()}>
-                <Title>{currentIndex + 3}</Title>
-                <Title>{currentIndex + 4}</Title>
-                <Title>{currentIndex + 5}</Title>
-              </Slide>
-              <Slide {...getNextSlideProps()}>
-                <Title>{nextIndex + 6}</Title>
-                <Title>{nextIndex + 7}</Title>
-                <Title>{nextIndex + 8}</Title>
-              </Slide>
+              <Fragment>
+                <Slide {...getPrevSlideProps()}>
+                  <Title>{prevIndex}</Title>
+                  <Title>{prevIndex + 1}</Title>
+                  <Title>{prevIndex + 2}</Title>
+                </Slide>
+                <Slide {...getCurrentSlideProps()}>
+                  <Title>{currentIndex + 3}</Title>
+                  <Title>{currentIndex + 4}</Title>
+                  <Title>{currentIndex + 5}</Title>
+                </Slide>
+                <Slide {...getNextSlideProps()}>
+                  <Title>{nextIndex + 6}</Title>
+                  <Title>{nextIndex + 7}</Title>
+                  <Title>{nextIndex + 8}</Title>
+                </Slide>
+              </Fragment>
             </Track>
           </Window>
           <NextButton {...getNextButtonProps()}>Next</NextButton>
           <Dots {...getIndicatorListProps()}>
             {Array.from({length: slideCount}).map((_, idx) => (
-              <Dot key={idx} {...getIndicatorProps({index: idx})}>{idx}</Dot>
+              <Dot key={idx} {...getIndicatorProps({index: idx})}>
+                {idx}
+              </Dot>
             ))}
           </Dots>
         </Slider>

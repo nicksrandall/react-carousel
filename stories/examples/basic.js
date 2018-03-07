@@ -1,4 +1,4 @@
-import React, {Component} from 'react'
+import React, {Component, Fragment} from 'react'
 import Carousel from '../../src'
 
 import styled from 'react-emotion'
@@ -132,21 +132,25 @@ function BasicCarousel() {
           <PrevButton {...getPrevButtonProps()}>Prev</PrevButton>
           <Window {...getWindowProps({refKey: 'innerRef'})}>
             <Track {...getTrackProps()}>
-              <Slide {...getPrevSlideProps()}>
-                <Title>{prevIndex}</Title>
-              </Slide>
-              <Slide {...getCurrentSlideProps()}>
-                <Title>{currentIndex}</Title>
-              </Slide>
-              <Slide {...getNextSlideProps()}>
-                <Title>{nextIndex}</Title>
-              </Slide>
+              <Fragment>
+                <Slide {...getPrevSlideProps()}>
+                  <Title>{prevIndex}</Title>
+                </Slide>
+                <Slide {...getCurrentSlideProps()}>
+                  <Title>{currentIndex}</Title>
+                </Slide>
+                <Slide {...getNextSlideProps()}>
+                  <Title>{nextIndex}</Title>
+                </Slide>
+              </Fragment>
             </Track>
           </Window>
           <NextButton {...getNextButtonProps()}>Next</NextButton>
           <Dots {...getIndicatorListProps()}>
             {Array.from({length: slideCount}).map((_, idx) => (
-              <Dot key={idx} {...getIndicatorProps({index: idx})}>{idx}</Dot>
+              <Dot key={idx} {...getIndicatorProps({index: idx})}>
+                {idx}
+              </Dot>
             ))}
           </Dots>
         </Slider>

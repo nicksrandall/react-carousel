@@ -24,6 +24,7 @@ class Carousel extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      focused: true,
       prevIndex: this.props.slideCount - 1,
       currentIndex: 0,
       nextIndex: 1,
@@ -46,15 +47,23 @@ class Carousel extends React.Component {
   componentDidMount() {
     this.calculateSizes()
     window.addEventListener('resize', this.resize, false)
+    document.addEventListener(
+      'visibilitychange',
+      this.handleVisibilityChange,
+      false,
+    )
+    document.addEventListener('keydown', this.keydown, false)
 
     if (this.props.autoPlay) {
       this.play()
     }
   }
   play = () => {
-    this.timeout = setTimeout(() => {
-      this.goToSlide(this.nextIndex(this.state.currentIndex))
-    }, this.props.slideDuration)
+    if (this.state.focused) {
+      this.timeout = setTimeout(() => {
+        this.goToSlide(this.nextIndex(this.state.currentIndex))
+      }, this.props.slideDuration)
+    }
   }
   pause = () => {
     clearTimeout(this.timeout)
@@ -69,8 +78,29 @@ class Carousel extends React.Component {
       this.running = false
     })
   }
+  handleVisibilityChange = () => {
+    this.setState({focused: !document.hidden}, () => {
+      document.hidden ? this.pause() : this.props.autoPlay && this.play()
+    })
+  }
+  keydown = e => {
+    if (e.keyCode === 37) {
+      // previous
+      this.goToSlide(this.prevIndex(this.state.currentIndex), true)
+    }
+    if (e.keyCode === 39) {
+      // next
+      this.goToSlide(this.nextIndex(this.state.currentIndex), true)
+    }
+  }
   componentWillUnmount() {
     window.removeEventListener('resize', this.resize, false)
+    document.removeEventListener(
+      'visibilitychange',
+      this.handleVisibilityChange,
+      false,
+    )
+    document.removeEventListener('keydown', this.keydown, false)
   }
   commitUpdate = () => {
     this.setState({
@@ -183,6 +213,7 @@ class Carousel extends React.Component {
     }
   }
   slide_handleSwipeStart = e => {
+    console.log('test', e);
     const posX = e.touches !== undefined ? e.touches[0].pageX : e.clientX
     this.setState({
       dragging: true,
@@ -218,6 +249,8 @@ class Carousel extends React.Component {
   }
   getNextSlideProps = ({style, ...rest} = {}) => {
     return {
+      key: this.state.finalNextIndex,
+      'data-index': this.state.finalNextIndex,
       style: {
         ...style,
         width: this.state.windowWidth,
@@ -234,6 +267,8 @@ class Carousel extends React.Component {
     ...rest
   } = {}) => {
     return {
+      key: this.state.finalCurrentIndex,
+      'data-index': this.state.finalCurrentIndex,
       onMouseDown: composeEventHandlers(
         onMouseDown,
         this.slide_handleSwipeStart,
@@ -256,6 +291,8 @@ class Carousel extends React.Component {
   }
   getPrevSlideProps = ({style, ...rest} = {}) => {
     return {
+      key: this.state.finalPrevIndex,
+      'data-index': this.state.finalPrevIndex,
       style: {
         ...style,
         width: this.state.windowWidth,
@@ -295,6 +332,7 @@ class Carousel extends React.Component {
   }
   getIndicatorProps = ({onClick, index, ...rest} = {}) => {
     return {
+      tabindex: index === this.state.currentIndex ? '-1' : null,
       onClick: composeEventHandlers(
         onClick,
         this.indicator_makeHandleClick(index),
@@ -314,8 +352,13 @@ class Carousel extends React.Component {
       getNextButtonProps,
       getIndicatorListProps,
       getIndicatorProps,
+
+      goToSlide,
+      nextIndex,
+      prevIndex,
     } = this
     return {
+      // props
       getRootProps,
       getWindowProps,
       getTrackProps,
@@ -327,6 +370,13 @@ class Carousel extends React.Component {
       getIndicatorListProps,
       getIndicatorProps,
 
+      // fnunctional helpers
+      goToSlide,
+      nextIndex,
+      prevIndex,
+
+      // state helpers
+      dragOffset: this.state.dragOffset,
       slideCount: this.props.slideCount,
       prevIndex: this.state.finalPrevIndex,
       currentIndex: this.state.finalCurrentIndex,
