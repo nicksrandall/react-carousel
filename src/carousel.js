@@ -213,7 +213,6 @@ class Carousel extends React.Component {
     }
   }
   slide_handleSwipeStart = e => {
-    console.log('test', e);
     const posX = e.touches !== undefined ? e.touches[0].pageX : e.clientX
     this.setState({
       dragging: true,
