@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 
 import {unwrapArray, noop, composeEventHandlers} from './utils'
 
+const clock = typeof performance === "object" && performance.now ? performance : Date;
+
 class Carousel extends React.Component {
   static propTypes = {
     children: PropTypes.func,
@@ -55,6 +57,7 @@ class Carousel extends React.Component {
     document.addEventListener('keydown', this.keydown, false)
 
     if (this.props.autoPlay) {
+      this.now = clock.now();
       this.play()
     }
   }
@@ -111,6 +114,7 @@ class Carousel extends React.Component {
   }
   goToSlide = (index, jump = false) => {
     this.pause()
+    this.now = clock.now();
 
     let transitionDirection = 1
     if (
@@ -269,17 +273,17 @@ class Carousel extends React.Component {
       key: this.state.finalCurrentIndex,
       'data-index': this.state.finalCurrentIndex,
       onMouseDown: composeEventHandlers(
-        onMouseDown,
         this.slide_handleSwipeStart,
+        onMouseDown,
       ),
       onMouseMove: composeEventHandlers(
-        onMouseMove,
         this.state.dragging ? this.slide_handleSwipeMove : null,
+        onMouseMove,
       ),
-      onMouseUp: composeEventHandlers(onMouseUp, this.slide_handleSwipeEnd),
+      onMouseUp: composeEventHandlers(this.slide_handleSwipeEnd, onMouseUp),
       onMouseLeave: composeEventHandlers(
-        onMouseLeave,
         this.state.dragging ? this.slide_handleSwipeEnd : null,
+        onMouseLeave,
       ),
       style: {
         ...style,
@@ -371,15 +375,21 @@ class Carousel extends React.Component {
 
       // fnunctional helpers
       goToSlide,
-      nextIndex,
-      prevIndex,
+      getNextIndex: nextIndex,
+      getPrevIndex: prevIndex,
 
       // state helpers
       dragOffset: this.state.dragOffset,
       slideCount: this.props.slideCount,
-      prevIndex: this.state.finalPrevIndex,
-      currentIndex: this.state.finalCurrentIndex,
-      nextIndex: this.state.finalNextIndex,
+      finalPrevIndex: this.state.finalPrevIndex,
+      finalCurrentIndex: this.state.finalCurrentIndex,
+      finalNextIndex: this.state.finalNextIndex,
+      prevIndex: this.state.prevIndex,
+      currentIndex: this.state.currentIndex,
+      nextIndex: this.state.nextIndex,
+
+      // can be used by indicators to show progress
+      startTime: this.now
     }
   }
   render() {

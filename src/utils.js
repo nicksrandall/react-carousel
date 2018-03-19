@@ -25,10 +25,9 @@ export function unwrapArray(arg, defaultValue) {
  * @return {Function} the event handler to add to an element
  */
 export function composeEventHandlers(...fns) {
-  return (event, ...args) =>
-    fns.some(fn => {
-      fn && fn(event, ...args)
-      // return event.defaultPrevented
-      return false
+  return (event, ...args) => {
+    fns.forEach(fn => {
+      fn && fn(event, ...args);
     })
+  }
 }

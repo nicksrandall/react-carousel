@@ -2326,13 +2326,27 @@ function composeEventHandlers() {
       args[_key2 - 1] = arguments[_key2];
     }
 
-    return fns.some(function (fn) {
+    fns.forEach(function (fn) {
       fn && fn.apply(undefined, [event].concat(args));
-      // return event.defaultPrevented
-      return false;
     });
   };
 }
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -2408,6 +2422,8 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
+var clock = (typeof performance === 'undefined' ? 'undefined' : _typeof(performance)) === "object" && performance.now ? performance : Date;
+
 var Carousel$1 = function (_React$Component) {
   inherits(Carousel, _React$Component);
 
@@ -2475,6 +2491,7 @@ var Carousel$1 = function (_React$Component) {
       var jump = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
       _this.pause();
+      _this.now = clock.now();
 
       var transitionDirection = 1;
       if (index > _this.state.currentIndex || index === 0 && _this.state.currentIndex === _this.props.slideCount - 1) {
@@ -2638,10 +2655,10 @@ var Carousel$1 = function (_React$Component) {
       return _extends({
         key: _this.state.finalCurrentIndex,
         'data-index': _this.state.finalCurrentIndex,
-        onMouseDown: composeEventHandlers(onMouseDown, _this.slide_handleSwipeStart),
-        onMouseMove: composeEventHandlers(onMouseMove, _this.state.dragging ? _this.slide_handleSwipeMove : null),
-        onMouseUp: composeEventHandlers(onMouseUp, _this.slide_handleSwipeEnd),
-        onMouseLeave: composeEventHandlers(onMouseLeave, _this.state.dragging ? _this.slide_handleSwipeEnd : null),
+        onMouseDown: composeEventHandlers(_this.slide_handleSwipeStart, onMouseDown),
+        onMouseMove: composeEventHandlers(_this.state.dragging ? _this.slide_handleSwipeMove : null, onMouseMove),
+        onMouseUp: composeEventHandlers(_this.slide_handleSwipeEnd, onMouseUp),
+        onMouseLeave: composeEventHandlers(_this.state.dragging ? _this.slide_handleSwipeEnd : null, onMouseLeave),
         style: _extends({}, style, {
           width: _this.state.windowWidth
         })
@@ -2748,6 +2765,7 @@ var Carousel$1 = function (_React$Component) {
     document.addEventListener('keydown', this.keydown, false);
 
     if (this.props.autoPlay) {
+      this.now = clock.now();
       this.play();
     }
   };
@@ -2759,8 +2777,6 @@ var Carousel$1 = function (_React$Component) {
   };
 
   Carousel.prototype.getStateAndHelpers = function getStateAndHelpers() {
-    var _ref11;
-
     var getRootProps = this.getRootProps,
         getWindowProps = this.getWindowProps,
         getTrackProps = this.getTrackProps,
@@ -2775,7 +2791,7 @@ var Carousel$1 = function (_React$Component) {
         nextIndex = this.nextIndex,
         prevIndex = this.prevIndex;
 
-    return _ref11 = {
+    return {
       // props
       getRootProps: getRootProps,
       getWindowProps: getWindowProps,
@@ -2790,13 +2806,22 @@ var Carousel$1 = function (_React$Component) {
 
       // fnunctional helpers
       goToSlide: goToSlide,
-      nextIndex: nextIndex,
-      prevIndex: prevIndex,
+      getNextIndex: nextIndex,
+      getPrevIndex: prevIndex,
 
       // state helpers
       dragOffset: this.state.dragOffset,
-      slideCount: this.props.slideCount
-    }, _ref11['prevIndex'] = this.state.finalPrevIndex, _ref11.currentIndex = this.state.finalCurrentIndex, _ref11['nextIndex'] = this.state.finalNextIndex, _ref11;
+      slideCount: this.props.slideCount,
+      finalPrevIndex: this.state.finalPrevIndex,
+      finalCurrentIndex: this.state.finalCurrentIndex,
+      finalNextIndex: this.state.finalNextIndex,
+      prevIndex: this.state.prevIndex,
+      currentIndex: this.state.currentIndex,
+      nextIndex: this.state.nextIndex,
+
+      // can be used by indicators to show progress
+      startTime: this.now
+    };
   };
 
   Carousel.prototype.render = function render() {
