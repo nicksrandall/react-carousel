@@ -8,15 +8,8 @@ React = React && React.hasOwnProperty('default') ? React['default'] : React;
 
 function noop() {}
 
-/**
- * Takes an argument and if it's an array, returns the first item in the array
- * otherwise returns the argument
- * @param {*} arg the maybe-array
- * @param {*} defaultValue the value if arg is falsey not defined
- * @return {*} the arg or it's first item
- */
 function unwrapArray(arg, defaultValue) {
-  arg = Array.isArray(arg) ? /* istanbul ignore next (preact) */arg[0] : arg;
+  arg = Array.isArray(arg) ? arg[0] : arg;
   if (!arg && defaultValue) {
     return defaultValue;
   } else {
@@ -24,14 +17,6 @@ function unwrapArray(arg, defaultValue) {
   }
 }
 
-/**
- * This is intended to be used to compose event handlers
- * They are executed in order until one of them calls
- * `event.preventDefault()`. Not sure this is the best
- * way to do this, but it seems legit...
- * @param {Function} fns the event handler functions
- * @return {Function} the event handler to add to an element
- */
 function composeEventHandlers() {
   for (var _len = arguments.length, fns = Array(_len), _key = 0; _key < _len; _key++) {
     fns[_key] = arguments[_key];
@@ -138,7 +123,7 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-var clock = (typeof performance === 'undefined' ? 'undefined' : _typeof(performance)) === "object" && performance.now ? performance : Date;
+var clock = (typeof performance === 'undefined' ? 'undefined' : _typeof(performance)) === 'object' && performance.now ? performance : Date;
 
 var Carousel$1 = function (_React$Component) {
   inherits(Carousel, _React$Component);
@@ -210,10 +195,24 @@ var Carousel$1 = function (_React$Component) {
       _this.now = clock.now();
 
       var transitionDirection = 1;
-      if (index > _this.state.currentIndex || index === 0 && _this.state.currentIndex === _this.props.slideCount - 1) {
-        transitionDirection = 2;
-      } else if (index < _this.state.currentIndex || _this.state.currentIndex === 0 && index === _this.props.slideCount - 1) {
-        transitionDirection = 0;
+      if (index === _this.props.slideCount - 1) {
+        if (_this.state.currentIndex === 0) {
+          transitionDirection = 0;
+        } else {
+          transitionDirection = 2;
+        }
+      } else if (index === 0) {
+        if (_this.state.currentIndex === _this.props.slideCount - 1) {
+          transitionDirection = 2;
+        } else {
+          transitionDirection = 0;
+        }
+      } else {
+        if (index > _this.state.currentIndex) {
+          transitionDirection = 2;
+        } else if (index < _this.state.currentIndex) {
+          transitionDirection = 0;
+        }
       }
 
       var animationMS = Math.abs(_this.state.windowWidth + _this.state.dragOffset - _this.state.windowWidth * transitionDirection) * _this.props.animationDuration / _this.state.windowWidth;
@@ -304,7 +303,7 @@ var Carousel$1 = function (_React$Component) {
 
       return _extends((_babelHelpers$extends2 = {}, _babelHelpers$extends2[refKey] = _this.trackRef, _babelHelpers$extends2.style = _extends({}, style, {
         width: _this.state.trackWidth,
-        transition: _this.state.animationMS > 0 ? 'transform ' + _this.state.animationMS + 'ms' : null,
+        transition: _this.state.animationMS > 0 ? 'transform ' + (_this.state.transitionDirection === 1 ? _this.state.animationMS * 2 : _this.state.animationMS) + 'ms ' + (_this.state.transitionDirection === 1 ? 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'ease-out') : null,
         transform: 'translate3d(-' + (_this.state.windowWidth * _this.state.transitionDirection + _this.state.dragOffset) + 'px, 0px, 0px)'
       }), _babelHelpers$extends2.onTransitionEnd = composeEventHandlers(onTransitionEnd, _this.track_handleTransitionEnd), _babelHelpers$extends2), rest);
     };
@@ -328,10 +327,12 @@ var Carousel$1 = function (_React$Component) {
     };
 
     _this.slide_handleSwipeEnd = function () {
-      if (_this.state.dragOffset > 100) {
+      if (_this.state.dragOffset > (_this.state.windowWidth > 1280 ? 250 : 100)) {
         _this.goToSlide(_this.nextIndex(_this.state.currentIndex));
-      } else if (_this.state.dragOffset < -100) {
+      } else if (_this.state.dragOffset < (_this.state.windowWidth > 1280 ? -250 : -100)) {
         _this.goToSlide(_this.prevIndex(_this.state.currentIndex));
+      } else if (_this.state.dragOffset !== 0) {
+        _this.goToSlide(_this.state.currentIndex);
       }
       _this.setState({
         dragging: false,
@@ -365,12 +366,20 @@ var Carousel$1 = function (_React$Component) {
           onMouseMove = _ref5.onMouseMove,
           onMouseUp = _ref5.onMouseUp,
           onMouseLeave = _ref5.onMouseLeave,
+          onTouchStart = _ref5.onTouchStart,
+          onTouchMove = _ref5.onTouchMove,
+          onTouchEnd = _ref5.onTouchEnd,
+          onTouchCancel = _ref5.onTouchCancel,
           style = _ref5.style,
-          rest = objectWithoutProperties(_ref5, ['onMouseDown', 'onMouseMove', 'onMouseUp', 'onMouseLeave', 'style']);
+          rest = objectWithoutProperties(_ref5, ['onMouseDown', 'onMouseMove', 'onMouseUp', 'onMouseLeave', 'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel', 'style']);
 
       return _extends({
         key: _this.state.finalCurrentIndex,
         'data-index': _this.state.finalCurrentIndex,
+        onTouchStart: composeEventHandlers(_this.slide_handleSwipeStart, onTouchStart),
+        onTouchMove: composeEventHandlers(_this.state.dragging ? _this.slide_handleSwipeMove : null, onTouchMove),
+        onTouchEnd: composeEventHandlers(_this.slide_handleSwipeEnd, onTouchEnd),
+        onTouchCancel: composeEventHandlers(_this.state.dragging ? _this.slide_handleSwipeEnd : null, onTouchCancel),
         onMouseDown: composeEventHandlers(_this.slide_handleSwipeStart, onMouseDown),
         onMouseMove: composeEventHandlers(_this.state.dragging ? _this.slide_handleSwipeMove : null, onMouseMove),
         onMouseUp: composeEventHandlers(_this.slide_handleSwipeEnd, onMouseUp),

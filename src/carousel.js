@@ -3,7 +3,8 @@ import PropTypes from 'prop-types'
 
 import {unwrapArray, noop, composeEventHandlers} from './utils'
 
-const clock = typeof performance === "object" && performance.now ? performance : Date;
+const clock =
+  typeof performance === 'object' && performance.now ? performance : Date
 
 class Carousel extends React.Component {
   static propTypes = {
@@ -57,7 +58,7 @@ class Carousel extends React.Component {
     document.addEventListener('keydown', this.keydown, false)
 
     if (this.props.autoPlay) {
-      this.now = clock.now();
+      this.now = clock.now()
       this.play()
     }
   }
@@ -114,24 +115,31 @@ class Carousel extends React.Component {
   }
   goToSlide = (index, jump = false) => {
     this.pause()
-    this.now = clock.now();
+    this.now = clock.now()
 
     let transitionDirection = 1
-    if (
-      index > this.state.currentIndex ||
-      (index === 0 && this.state.currentIndex === this.props.slideCount - 1)
-    ) {
-      transitionDirection = 2
-    } else if (
-      index < this.state.currentIndex ||
-      (this.state.currentIndex === 0 && index === this.props.slideCount - 1)
-    ) {
-      transitionDirection = 0
+    if (index === this.props.slideCount - 1) {
+      if (this.state.currentIndex === 0) {
+        transitionDirection = 0
+      } else {
+        transitionDirection = 2
+      }
+    } else if (index === 0) {
+      if (this.state.currentIndex === this.props.slideCount - 1) {
+        transitionDirection = 2
+      } else {
+        transitionDirection = 0
+      }
+    } else {
+      if (index > this.state.currentIndex) {
+        transitionDirection = 2
+      } else if (index < this.state.currentIndex) {
+        transitionDirection = 0
+      }
     }
 
     let animationMS =
-      Math.abs(
-        this.state.windowWidth +
+      Math.abs( this.state.windowWidth +
           this.state.dragOffset -
           this.state.windowWidth * transitionDirection,
       ) *
@@ -203,7 +211,7 @@ class Carousel extends React.Component {
         width: this.state.trackWidth,
         transition:
           this.state.animationMS > 0
-            ? `transform ${this.state.animationMS}ms`
+            ? `transform ${this.state.transitionDirection === 1 ? this.state.animationMS * 2 : this.state.animationMS}ms ${this.state.transitionDirection === 1 ? 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'ease-out'}`
             : null,
         transform: `translate3d(-${this.state.windowWidth *
           this.state.transitionDirection +
@@ -236,10 +244,12 @@ class Carousel extends React.Component {
     this.setState({dragOffset, touchObject})
   }
   slide_handleSwipeEnd = () => {
-    if (this.state.dragOffset > 100) {
+    if (this.state.dragOffset > (this.state.windowWidth > 1280 ? 250 : 100)) {
       this.goToSlide(this.nextIndex(this.state.currentIndex))
-    } else if (this.state.dragOffset < -100) {
+    } else if (this.state.dragOffset < (this.state.windowWidth > 1280 ? -250 : -100)) {
       this.goToSlide(this.prevIndex(this.state.currentIndex))
+    } else if (this.state.dragOffset !== 0) {
+      this.goToSlide(this.state.currentIndex)
     }
     this.setState({
       dragging: false,
@@ -266,12 +276,20 @@ class Carousel extends React.Component {
     onMouseMove,
     onMouseUp,
     onMouseLeave,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+    onTouchCancel,
     style,
     ...rest
   } = {}) => {
     return {
       key: this.state.finalCurrentIndex,
       'data-index': this.state.finalCurrentIndex,
+      onTouchStart: composeEventHandlers(this.slide_handleSwipeStart, onTouchStart),
+      onTouchMove: composeEventHandlers(this.state.dragging ? this.slide_handleSwipeMove : null, onTouchMove),
+      onTouchEnd: composeEventHandlers(this.slide_handleSwipeEnd, onTouchEnd),
+      onTouchCancel: composeEventHandlers(this.state.dragging ? this.slide_handleSwipeEnd : null, onTouchCancel),
       onMouseDown: composeEventHandlers(
         this.slide_handleSwipeStart,
         onMouseDown,
@@ -389,7 +407,7 @@ class Carousel extends React.Component {
       nextIndex: this.state.nextIndex,
 
       // can be used by indicators to show progress
-      startTime: this.now
+      startTime: this.now,
     }
   }
   render() {
