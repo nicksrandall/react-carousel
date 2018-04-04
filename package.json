@@ -50,15 +50,15 @@
     "typings"
   ],
   "devDependencies": {
-    "@storybook/react": "^3.3.14",
-    "babel-plugin-emotion": "^9.0.1",
+    "@storybook/react": "^3.4.0",
+    "babel-plugin-emotion": "^9.1.0",
     "eslint-plugin-react": "^7.7.0",
     "nick-scripts": "0.0.1"
   },
   "dependencies": {
     "preact": "^8.2.7",
     "prop-types": "^15.6.1",
-    "react": "^16.2.0",
-    "react-dom": "^16.2.0"
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1"
   }
 }

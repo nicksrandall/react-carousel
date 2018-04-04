@@ -1,5 +1,5 @@
 {
-  "main": "dist/react-carousel.cjs.js",
-  "jsnext:main": "dist/react-carousel.esm.js",
-  "module": "dist/react-carousel.esm.js"
+  "main": "dist/react-horizontal-carousel.cjs.js",
+  "jsnext:main": "dist/react-horizontal-carousel.esm.js",
+  "module": "dist/react-horizontal-carousel.esm.js"
 }
